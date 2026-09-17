@@ -1,25 +1,35 @@
-import {Column, DataType, Model, Table } from "sequelize-typescript";
- 
+import {Table,Column,Model,DataType,PrimaryKey,Default, ForeignKey, BelongsTo,} from 'sequelize-typescript';
+import { Role } from 'src/roles/role.model';
 
-export interface UserCreationAttrs {
-  email: string;
-  password: string;
-  name: string}
 
-  @Table({ 
-    tableName: 'users',
-     timestamps: true,
-    })
-export class Users extends Model {
+  @Table({
+  tableName: 'users',
+  })
 
-  @Column({ type: DataType.INTEGER, autoIncrement: true, primaryKey: true })
-  declare id: number;
+export class User extends Model {
+  
+  
+  @PrimaryKey@Default(DataType.UUIDV4) @Column(DataType.UUID)
+  declare id: string;
 
-  @Column( {type: DataType.STRING, allowNull: false, unique: true, validate: { isEmail: true }})
+  @Column({type: DataType.STRING, allowNull: false,})
+  keycloakId!: string;
+
+  @Column({type: DataType.STRING, allowNull: false,})
+  name!: string;
+
+  @Column({type: DataType.STRING, allowNull: false,})
+  lastName!: string;
+
+  @Column({type: DataType.STRING,allowNull: false,})
   email!: string;
-    
-  @Column( {type: DataType.STRING, allowNull: false })
-  password!: string;
-    
-  @Column( {type: DataType.STRING, allowNull: false })
-  name!: string;}
+
+  @Column({type: DataType.BOOLEAN,defaultValue: true,})
+  isActive!: boolean;
+
+  @ForeignKey(() => Role)@Column({type: DataType.INTEGER, allowNull: false})
+  roleId!: number;
+
+  @BelongsTo(() => Role)
+  role!: Role;
+}
