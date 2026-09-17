@@ -32,3 +32,5 @@ export class UniversityController {
     return this.universityService.remove(+id);
   }
 }
+
+export { UniversityService };

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UniversityService } from './university.service';
+import { UniversityService } from './university.controller';
 import { UniversityController } from './university.controller';
 
 @Module({
