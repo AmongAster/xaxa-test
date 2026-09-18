@@ -1,0 +1,18 @@
+services:
+  crm-postgres:
+    image: postgres:alpine3.23
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - ${PROJECT_ROOT}/out/pgdata:/usr/local/
+    restart: always
+
+  crm-keycloak:
+    image: imageName
+    environment:
+      - name=value
+    ports:
+      -
+    
