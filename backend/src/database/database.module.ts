@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { University } from 'src/catalogs/universities/university.model';
+import { University } from 'src/catalogs/models/university.model';
+ 
 import { Role } from 'src/roles/role.model';
 import { User } from 'src/users/users.model';
  
