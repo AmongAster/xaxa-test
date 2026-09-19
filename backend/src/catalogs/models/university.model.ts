@@ -26,6 +26,9 @@ export interface UniversityContact {
   name!: string; // Название ВУЗа
 
   @Column({ type: DataType.STRING, allowNull: true })
+  vendor!: string; // Вендор
+
+  @Column({ type: DataType.STRING, allowNull: true })
   software!: string; // ПО
 
   @Column({ type: DataType.STRING, allowNull: true })
