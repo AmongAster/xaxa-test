@@ -14,6 +14,7 @@
         "@nestjs/platform-express": "^11.0.1",
         "@nestjs/sequelize": "^12.0.0",
         "@nestjs/swagger": "^11.4.7",
+        "@types/multer": "^2.2.0",
         "bullmq": "^6.3.7",
         "cache-manager-redis-yet": "^5.1.5",
         "class-transformer": "^0.5.1",
@@ -425,6 +426,8 @@
     "@types/methods": ["@types/methods@1.1.4", "", {}, "sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ=="],
 
     "@types/ms": ["@types/ms@2.1.0", "", {}, "sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA=="],
+
+    "@types/multer": ["@types/multer@2.2.0", "", { "dependencies": { "@types/express": "*" } }, "sha512-3U1troeqGV8Ntp7Q3klwf4zr23VEoqYVocYXaswm9+8z3O9UHDYAqLxjJ/h550iRADTjKdOdhhasXw6gD6kYtg=="],
 
     "@types/node": ["@types/node@24.13.4", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-YJ7EqCstVTzIr0fMr7qul/977en+pQHrfmuKIo6Zr9i75Be21dr3MovcfvGtyvi2HAUrRerWps5sMO9I7WaxDw=="],
 
