@@ -1,10 +1,14 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { type Cache } from 'cache-manager';
 =======
 import type { Cache } from 'cache-manager'; 
 >>>>>>> 78a8f4f968d570f6546ca46cf7d23f14d2f55029
+=======
+import type { Cache } from 'cache-manager'; 
+>>>>>>> b94e95c85a56af10ce762959f76bd8cef2f7c4d8
 import { InjectModel } from '@nestjs/sequelize';
 import { ITDirection } from '../models/it-direction.model';
 import { CreateITDirectionDto, UpdateITDirectionDto } from '../dto/create-itdirection.dto';
@@ -24,6 +28,7 @@ export class ITDirectionsService {
   async findAll(): Promise<ITDirection[]> {
     const cached = await this.cacheManager.get<ITDirection[]>(CACHE_KEY);
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (cached) {
       return cached;
     }
@@ -32,6 +37,10 @@ export class ITDirectionsService {
     if (cached) return cached;
     
 >>>>>>> 78a8f4f968d570f6546ca46cf7d23f14d2f55029
+=======
+    if (cached) return cached;
+    
+>>>>>>> b94e95c85a56af10ce762959f76bd8cef2f7c4d8
     const directions = await this.directionModel.findAll({ order: [['name', 'ASC']] });
     await this.cacheManager.set(CACHE_KEY, directions);
     
@@ -49,6 +58,7 @@ export class ITDirectionsService {
   async create(dto: CreateITDirectionDto): Promise<ITDirection> {
     try {
 <<<<<<< HEAD
+<<<<<<< HEAD
       const created = await this.directionModel.create(dto as any);
       await this.invalidateCache();
       return created;
@@ -61,6 +71,13 @@ export class ITDirectionsService {
     } catch (error) {
       throw rethrowAsHttpException(error); 
 >>>>>>> 78a8f4f968d570f6546ca46cf7d23f14d2f55029
+=======
+      const created = await this.directionModel.create(dto as unknown as ITDirection);
+      await this.invalidateCache();
+      return created;
+    } catch (error) {
+      throw rethrowAsHttpException(error); 
+>>>>>>> b94e95c85a56af10ce762959f76bd8cef2f7c4d8
     }
   }
 
