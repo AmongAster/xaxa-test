@@ -1,5 +1,5 @@
 import {BelongsTo,Column,DataType,ForeignKey,HasMany,Model,Table,} from 'sequelize-typescript';
-import { Role } from 'src/roles/role.model';
+import { Role } from '../roles/role.model';
 
 
 @Table({ tableName: 'users', timestamps: true })

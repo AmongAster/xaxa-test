@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { University } from 'src/catalogs/models/university.model';
+import { AuditLog } from '../audit/audit-log.model';
+import { ITDirection } from '../catalogs/models/it-direction.model';
+import { ITProduct } from '../catalogs/models/it-product.model';
+import { University } from '../catalogs/models/university.model';
  
-import { Role } from 'src/roles/role.model';
-import { User } from 'src/users/users.model';
+import { Role } from '../roles/role.model';
+import { User } from '../users/users.model';
  
 @Module({
   imports: [
@@ -18,9 +21,9 @@ import { User } from 'src/users/users.model';
         username: config.get<string>('DB_USER', 'postgres'),
         password: config.get<string>('DB_PASSWORD', 'postgres'),
         database: config.get<string>('DB_NAME', 'crm_it_school'),
-        models: [Role, User, University,],
+        models: [Role, User, University, ITProduct, ITDirection, AuditLog],
         autoLoadModels: true,
-        synchronize: false,  
+        synchronize: true,  
         logging: config.get<string>('NODE_ENV') === 'development' ? console.log : false,
       }),
     }),

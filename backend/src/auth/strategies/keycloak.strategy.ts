@@ -36,16 +36,28 @@ export class KeycloakStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: KeycloakJwtPayload) {
-    const user = await this.usersService.findByKeycloakId(payload.sub);
-    if (!user) {
+    // 1. Ищем пользователя в базе CRM по его ID из Keycloak (поле sub)
+    let user = await this.usersService.findByKeycloakId(payload.sub);
 
-      throw new UnauthorizedException(
-        'Пользователь авторизован в Keycloak, но не найден в CRM. Обратитесь к администратору.',
-      );
+    // 2. Если пользователя нет в базе данных CRM — создаем его автоматически
+    if (!user) {
+      user = await this.usersService.create({
+        keycloakId: payload.sub,
+        email: payload.email,
+        fullName: payload.name || payload.preferred_username || 'Новый пользователь',
+        roleId: 2, 
+      });
+      
+      console.log(`[Keycloak Auto-Register] Пользователь ${payload.email} сохранен в БД CRM.`);
     }
+
+    // 3. Если пользователь найден, но администратор его отключил
     if (!user.isActive) {
       throw new UnauthorizedException('Учётная запись деактивирована');
     }
+
+    // 4. Возвращаем объект пользователя из БД.
+    // Passport прикрепит его к request.user, и декоратор @CurrentUser() сможет его прочитать
     return user; 
   }
 }

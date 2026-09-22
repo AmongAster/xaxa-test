@@ -42,24 +42,31 @@ services:
     ports:
       - '8080:8080'
 
-  # crm-backend:
-  #   build: .
-  #   restart: unless-stopped
-  #   environment:
-  #     - DB_HOST=${DB_HOST}
-  #     - DB_PORT=${DB_PORT}
-  #     - DB_USER=${DB_USER}
-  #     - DB_PASSWORD=${DB_PASSWORD}
-  #     - DB_NAME=${DB_NAME}
-  #     - REDIS_HOST=${REDIS_HOST}
-  #     - REDIS_PORT=${REDIS_PORT}
-  #     - PORT=${APP_PORT:-3000}
-  #     - HOST=${APP_DOMAIN:-localhost}
-  #   ports:
-  #     - "${HOST_PORT:-3000}:${APP_PORT:-3000}"
-  #   depends_on:
-  #     - crm-postgres
-  #     - crm-redis
+  crm-backend:
+    build:
+      context: ./backend    # Папка, где лежит код и package.json бэкенда
+      dockerfile: Dockerfile # Имя файла внутри этой папки
+    restart: unless-stopped
+    environment:
+      - DB_HOST=crm-postgres # Указываем имя докер-сервиса базы данных
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=crm-redis # Указываем имя докер-сервиса редиса
+      - REDIS_PORT=${REDIS_PORT}
+      - PORT=${APP_PORT:-3000}
+      - HOST=${APP_DOMAIN:-localhost}
+      # Переменные для работы Keycloak внутри Docker
+      - KEYCLOAK_URL=http://crm-keycloak:8080
+      - KEYCLOAK_REALM=my-crm-realm
+      - KEYCLOAK_CLIENT_ID=nestjs-backend
+    ports:
+      - "${HOST_PORT:-3000}:${APP_PORT:-3000}"
+    depends_on:
+      - crm-postgres
+      - crm-redis
+      - crm-keycloak # Добавляем зависимость от Keycloak
 
 volumes:
   redis_data:
