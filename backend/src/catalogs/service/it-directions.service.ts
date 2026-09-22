@@ -1,6 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+<<<<<<< HEAD
 import { type Cache } from 'cache-manager';
+=======
+import type { Cache } from 'cache-manager'; 
+>>>>>>> 78a8f4f968d570f6546ca46cf7d23f14d2f55029
 import { InjectModel } from '@nestjs/sequelize';
 import { ITDirection } from '../models/it-direction.model';
 import { CreateITDirectionDto, UpdateITDirectionDto } from '../dto/create-itdirection.dto';
@@ -11,18 +15,26 @@ const CACHE_KEY = 'catalogs:it-directions:all';
 @Injectable()
 export class ITDirectionsService {
   constructor(
-    @InjectModel(ITDirection) private directionModel: typeof ITDirection,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @InjectModel(ITDirection) 
+    private readonly directionModel: typeof ITDirection,
+    @Inject(CACHE_MANAGER) 
+    private readonly cacheManager: Cache,
   ) {}
 
   async findAll(): Promise<ITDirection[]> {
     const cached = await this.cacheManager.get<ITDirection[]>(CACHE_KEY);
+<<<<<<< HEAD
     if (cached) {
       return cached;
     }
 
+=======
+    if (cached) return cached;
+    
+>>>>>>> 78a8f4f968d570f6546ca46cf7d23f14d2f55029
     const directions = await this.directionModel.findAll({ order: [['name', 'ASC']] });
     await this.cacheManager.set(CACHE_KEY, directions);
+    
     return directions;
   }
 
@@ -36,11 +48,19 @@ export class ITDirectionsService {
 
   async create(dto: CreateITDirectionDto): Promise<ITDirection> {
     try {
+<<<<<<< HEAD
       const created = await this.directionModel.create(dto as any);
       await this.invalidateCache();
       return created;
     } catch (error) {
       rethrowAsHttpException(error);
+=======
+      const created = await this.directionModel.create(dto as unknown as ITDirection);
+      await this.invalidateCache();
+      return created;
+    } catch (error) {
+      throw rethrowAsHttpException(error); 
+>>>>>>> 78a8f4f968d570f6546ca46cf7d23f14d2f55029
     }
   }
 
@@ -52,12 +72,13 @@ export class ITDirectionsService {
       await this.invalidateCache();
       return updated;
     } catch (error) {
-      rethrowAsHttpException(error);
+      throw rethrowAsHttpException(error);
     }
   }
 
   async remove(id: number): Promise<void> {
     const direction = await this.findOne(id);
+    
     await direction.destroy();
     await this.invalidateCache();
   }
