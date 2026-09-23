@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { ITDirection } from '../models/it-direction.model';
 import { CreateITDirectionDto, UpdateITDirectionDto } from '../dto/create-itdirection.dto';
 import { rethrowAsHttpException } from 'src/common/utils/Sequelize error.util';
- 
+
 const CACHE_KEY = 'catalogs:it-directions:all';
 
 @Injectable()

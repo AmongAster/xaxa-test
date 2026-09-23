@@ -1,9 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, WhereOptions } from 'sequelize';
-
- 
-
 import { CreateUniversityDto } from '../dto/create-university.dto';
 import { UpdateUniversityDto } from '../dto/update-university.dto';
 import { FilterUniversityDto } from '../dto/filter-university.dto';
@@ -142,9 +139,9 @@ export class UniversitiesService {
       where['transferStatus'] = filter.transferStatus;
     }
 
-    // Размытый поиск по названию (регистронезависимый)
+    // Размытый поиск по названию
     if (filter.search) {
-      where['name'] = { [Op.iLike]: `%${filter.search}%` };
+      where['name'] = { [Op.iLike]: `%${filter.search.trim()}%` };
     }
 
     return where;

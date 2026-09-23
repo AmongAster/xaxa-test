@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateITProductDto, UpdateITProductDto } from "../dto/create-itproduct.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from "@nestjs/sequelize";
 import { ITProduct } from "../models/it-product.model";
+import { CreateITProductDto, UpdateITProductDto } from "../dto/create-itproduct.dto";
 
 @Injectable()
 export class ITProductsService {
@@ -10,7 +10,6 @@ export class ITProductsService {
     private readonly productModel: typeof ITProduct,
   ) {}
 
-   
   async findAll(universityId?: number) {
     const products = await this.productModel.findAll({
       where: universityId ? { universityId } : {},
@@ -22,7 +21,6 @@ export class ITProductsService {
 
     return products;
   }
-
   
   async findOne(id: number) {
     const product = await this.productModel.findByPk(id);
@@ -35,8 +33,8 @@ export class ITProductsService {
   }
 
   async create(dto: CreateITProductDto) {
-  return await this.productModel.create({ ...dto } as any); 
-}
+    return await this.productModel.create({ ...dto } as any); 
+  }
 
   async update(id: number, dto: UpdateITProductDto) {
     const product = await this.findOne(id);
