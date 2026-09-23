@@ -1,35 +1,39 @@
-import {Table,Column,Model,DataType,PrimaryKey,Default, ForeignKey, BelongsTo,} from 'sequelize-typescript';
+import {BelongsTo,Column,DataType,ForeignKey,HasMany,Model,Table,} from 'sequelize-typescript';
 import { Role } from 'src/roles/role.model';
 
 
-  @Table({
-  tableName: 'users',
-  })
+@Table({ tableName: 'users', timestamps: true })
+export class User extends Model<User> {
+@Column({ type: DataType.STRING, allowNull: false, unique: true })
+keycloakId!: string;
 
-export class User extends Model {
-  
-  
-  @PrimaryKey@Default(DataType.UUIDV4) @Column(DataType.UUID)
-  declare id: string;
+@Column({ type: DataType.STRING, allowNull: false, unique: true })
+email!: string;
 
-  @Column({type: DataType.STRING, allowNull: false,})
-  keycloakId!: string;
+@Column({ type: DataType.STRING, allowNull: false })
+fullName!: string;
 
-  @Column({type: DataType.STRING, allowNull: false,})
-  name!: string;
+@Column({ type: DataType.STRING, allowNull: true })
+phone!: string;
 
-  @Column({type: DataType.STRING, allowNull: false,})
-  lastName!: string;
+@ForeignKey(() => Role)
+@Column({ type: DataType.INTEGER, allowNull: false })
+roleId!: number;
 
-  @Column({type: DataType.STRING,allowNull: false,})
-  email!: string;
+@BelongsTo(() => Role)
+role!: Role;
 
-  @Column({type: DataType.BOOLEAN,defaultValue: true,})
-  isActive!: boolean;
+// Самоссылка для иерархии "руководитель -> подчинённые" (видимость ВУЗов)
+@ForeignKey(() => User)
+@Column({ type: DataType.INTEGER, allowNull: true })
+managerUserId!: number;
 
-  @ForeignKey(() => Role)@Column({type: DataType.INTEGER, allowNull: false})
-  roleId!: number;
+@BelongsTo(() => User, 'managerUserId')
+managerUser!: User;
 
-  @BelongsTo(() => Role)
-  role!: Role;
+@HasMany(() => User, 'managerUserId')
+subordinates!: User[];
+
+@Column({ type: DataType.BOOLEAN, defaultValue: true })
+isActive!: boolean;
 }

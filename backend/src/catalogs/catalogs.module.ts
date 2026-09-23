@@ -1,8 +1,22 @@
 import { Module } from '@nestjs/common';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { University } from './models/university.model';
+import { ITDirection } from './models/it-direction.model';
+import { ITProduct } from './models/it-product.model';
+import { UsersModule } from '../users/users.module';
+import { UniversitiesService } from './service/universities.service';
+import { ITDirectionsService } from './service/it-directions.service';
+import { ITProductsService } from './service/it-products.service';
 
+ 
 
 @Module({
-  controllers: [ ],
-  providers: [ ],
+  imports: [
+    SequelizeModule.forFeature([University, ITDirection, ITProduct]),
+    UsersModule,
+  ],
+  controllers: [],
+  providers: [UniversitiesService, ITDirectionsService, ITProductsService,],
+  exports: [SequelizeModule],
 })
 export class CatalogsModule {}

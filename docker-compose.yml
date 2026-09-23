@@ -1,18 +1,66 @@
 services:
   crm-postgres:
     image: postgres:alpine3.23
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-    volumes:
-      - ${PROJECT_ROOT}/out/pgdata:/usr/local/
     restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - '5432:5432'
+    volumes:
+      - ${PROJECT_ROOT}/out:/var/lib/postgresql
+
+  crm-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  crm-minio:
+    image: quay.io/minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
 
   crm-keycloak:
-    image: imageName
+    image: quay.io/keycloak/keycloak:26.3
+    restart: unless-stopped
+    command: start-dev
     environment:
-      - name=value
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
     ports:
-      -
-    
+      - '8080:8080'
+
+  # crm-backend:
+  #   build: .
+  #   restart: unless-stopped
+  #   environment:
+  #     - DB_HOST=${DB_HOST}
+  #     - DB_PORT=${DB_PORT}
+  #     - DB_USER=${DB_USER}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #     - DB_NAME=${DB_NAME}
+  #     - REDIS_HOST=${REDIS_HOST}
+  #     - REDIS_PORT=${REDIS_PORT}
+  #     - PORT=${APP_PORT:-3000}
+  #     - HOST=${APP_DOMAIN:-localhost}
+  #   ports:
+  #     - "${HOST_PORT:-3000}:${APP_PORT:-3000}"
+  #   depends_on:
+  #     - crm-postgres
+  #     - crm-redis
+
+volumes:
+  redis_data:
+  minio_data:
