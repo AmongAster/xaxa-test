@@ -20,11 +20,6 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    
-    // 👇 ДОБАВЬТЕ ЭТИ СТРОКИ:
-    "paths": {
-      "src/*": ["../src/*"]
-    }
+    "noFallthroughCasesInSwitch": false
   }
 }

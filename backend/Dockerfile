@@ -1,17 +1,20 @@
 # === ЭТАП 1: Установка зависимостей и сборка приложения ===
-FROM oven/bun:1.2-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /usr/local/app
 
-# Копируем package.json
-COPY package.json ./
-RUN bun install 
+# Копируем файлы зависимостей
+COPY package*.json ./
+RUN npm ci
 
 # Копируем исходный код и собираем NestJS проект
 COPY . .
-RUN bun run build
+RUN npm run build
+
+# Удаляем devDependencies и оставляем только production-зависимости
+RUN npm prune --production
 
 # === ЭТАП 2: Финальный легковесный образ ===
-FROM oven/bun:1.2-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /usr/local/app
 
 ENV NODE_ENV=production
@@ -23,5 +26,5 @@ COPY --from=builder /usr/local/app/package.json ./package.json
 
 EXPOSE 3000
 
-# Правильный запуск NestJS в среде Bun
-CMD ["bun", "dist/main.js"]
+# Запуск NestJS приложения с помощью Node.js
+CMD ["node", "dist/main.js"]

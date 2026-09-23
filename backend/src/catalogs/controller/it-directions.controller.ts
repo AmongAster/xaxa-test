@@ -1,10 +1,10 @@
 import { ApiTags } from "@nestjs/swagger";
 import { ITDirectionsService } from "../service/it-directions.service";
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
-import { RolesGuard } from "src/common/guards/roles.guard";
-import { Roles } from "src/common/decorators/roles.decorator";
-import { Role, RoleName } from "src/roles/role.model";
+import { JwtAuthGuard } from "../../common/guards/jwt-auth.guard";
+import { RolesGuard } from "../../common/guards/roles.guard";
+import { Roles } from "../../common/decorators/roles.decorator";
+import { Role, RoleName } from "../../roles/role.model";
 import { CreateITDirectionDto, UpdateITDirectionDto } from "../dto/create-itdirection.dto";
 
 
