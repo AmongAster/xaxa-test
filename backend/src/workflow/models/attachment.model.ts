@@ -1,31 +1,39 @@
 import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { WorkflowInstance } from './workflow-instance.model';
+import { WorkflowStepHistory } from './workflow-step-history.model';
 import { Optional } from 'sequelize';
-
-interface AttachmentCreationAttributes extends Optional<AttachmentAttributes, 'id'> {}
 
 interface AttachmentAttributes {
   id: number;
-  instanceId: number;
+  stepHistoryId: number;
   filename: string;
   path: string;
+  mimeType: string;
+  size: number;
 }
 
-@Table({ tableName: 'attachments' })
+interface AttachmentCreationAttributes extends Optional<AttachmentAttributes, 'id'> {}
+
+@Table({ tableName: 'attachments', timestamps: true })
 export class Attachment extends Model<AttachmentAttributes, AttachmentCreationAttributes> {
   @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
   declare id: number;
 
-  @ForeignKey(() => WorkflowInstance)
+  @ForeignKey(() => WorkflowStepHistory)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  instanceId!: number;
+  stepHistoryId!: number;
 
-  @BelongsTo(() => WorkflowInstance)
-  instance!: WorkflowInstance;
+  @BelongsTo(() => WorkflowStepHistory)
+  stepHistory!: WorkflowStepHistory;
 
   @Column({ type: DataType.STRING, allowNull: false })
   filename!: string;
 
   @Column({ type: DataType.STRING, allowNull: false })
   path!: string;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  mimeType!: string;
+
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  size!: number;
 }

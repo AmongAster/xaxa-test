@@ -1,7 +1,8 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Column, DataType, Model, Table, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
 import { WorkflowInstance } from './workflow-instance.model';
+import { Attachment } from './attachment.model';
 
-@Table({ tableName: 'workflow_step_histories' })
+@Table({ tableName: 'workflow_step_histories', timestamps: true })
 export class WorkflowStepHistory extends Model<WorkflowStepHistory> {
   @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
   declare id: number;
@@ -20,5 +21,8 @@ export class WorkflowStepHistory extends Model<WorkflowStepHistory> {
   status!: string;
 
   @Column({ type: DataType.TEXT, allowNull: true })
-  comment?: string; // Комментарий необязателен
+  comment?: string;
+
+  @HasMany(() => Attachment)
+  attachments!: Attachment[];
 }
