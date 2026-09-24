@@ -1,29 +1,48 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
+import {BelongsTo,Column,DataType,ForeignKey,HasMany,Model,Table,} from 'sequelize-typescript';
 import { WorkflowTemplate } from './workflow-template.model';
 import { WorkflowStepHistory } from './workflow-step-history.model';
-import { Attachment } from './attachment.model';
+import { University } from '../../catalogs/models/university.model';
+import { ITProduct } from '../../catalogs/models/it-product.model';
 
-@Table({ tableName: 'workflow_instances' })
+export enum WorkflowInstanceStatus {
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  PAUSED = 'PAUSED',
+}
+
+@Table({ tableName: 'workflow_instances', timestamps: true })
 export class WorkflowInstance extends Model<WorkflowInstance> {
-  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
-  declare id: number;
-
   @ForeignKey(() => WorkflowTemplate)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  templateId!: number;
+  declare templateId: number;
 
   @BelongsTo(() => WorkflowTemplate)
   template!: WorkflowTemplate;
 
-  @Column({ type: DataType.STRING, defaultValue: 'PENDING' })
-  status!: string;
+  @ForeignKey(() => University)
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  universityId!: number;
 
-  @Column({ type: DataType.STRING, allowNull: true })
-  currentStep?: string; // Может отсутствовать
+  @BelongsTo(() => University)
+  university!: University;
+
+  @ForeignKey(() => ITProduct)
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  productId!: number;
+
+  @BelongsTo(() => ITProduct)
+  product!: ITProduct;
+
+  @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 0 })
+  currentStepIndex!: number;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(WorkflowInstanceStatus)),
+    allowNull: false,
+    defaultValue: WorkflowInstanceStatus.ACTIVE,
+  })
+  status!: WorkflowInstanceStatus;
 
   @HasMany(() => WorkflowStepHistory)
   history!: WorkflowStepHistory[];
-
-  @HasMany(() => Attachment)
-  attachments!: Attachment[];
 }

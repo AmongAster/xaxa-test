@@ -1,29 +1,20 @@
-import { IsString, IsArray, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsNumber, IsString, IsOptional, Min } from 'class-validator';
 
-export class CreateWorkflowTemplateDto {
-  @IsString()
-  @IsNotEmpty()
-  name!: string;
-
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  @IsArray()
-  @IsNotEmpty()
-  steps!: { stepName: string; order: number }[];
-}
-
-export class StartWorkflowDto {
+export class CreateWorkflowInstanceDto {
   @IsNumber()
-  @IsNotEmpty()
   templateId!: number;
+
+  @IsNumber()
+  universityId!: number;
+
+  @IsNumber()
+  productId!: number; // Обязательное поле для связи с IT-продуктом
 }
 
-export class UpdateStepDto {
-  @IsString()
-  @IsNotEmpty()
-  status!: string;
+export class TransitionWorkflowDto {
+  @IsNumber()
+  @Min(0)
+  targetStepIndex!: number;
 
   @IsString()
   @IsOptional()
