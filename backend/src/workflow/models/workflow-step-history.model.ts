@@ -1,28 +1,101 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
-import { WorkflowInstance } from './workflow-instance.model';
+import {BelongsTo,Column,DataType,ForeignKey,HasMany,Model,Table,} from 'sequelize-typescript';
+import { User } from '../../users/users.model';
 import { Attachment } from './attachment.model';
+import { WorkflowInstance } from './workflow-instance.model';
 
-@Table({ tableName: 'workflow_step_histories', timestamps: true })
-export class WorkflowStepHistory extends Model<WorkflowStepHistory> {
-  @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
+interface WorkflowStepHistoryAttributes {
+  id: number;
+  instanceId: number;
+  fromStepIndex: number | null;
+  fromStepName: string | null;
+  toStepIndex: number;
+  stepName: string;
+  userId: number;
+  comment: string | null;
+  changedAt: Date;
+  createdAt: Date;
+}
+
+interface WorkflowStepHistoryCreationAttributes
+  extends Omit<
+    WorkflowStepHistoryAttributes,
+    'id' | 'createdAt'
+  > {}
+
+@Table({
+  tableName: 'workflow_step_history',
+  timestamps: true,
+  updatedAt: false,
+})
+export class WorkflowStepHistory extends Model<
+  WorkflowStepHistoryAttributes,
+  WorkflowStepHistoryCreationAttributes
+> {
+  @Column({
+    type: DataType.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  })
   declare id: number;
 
   @ForeignKey(() => WorkflowInstance)
-  @Column({ type: DataType.INTEGER, allowNull: false })
-  instanceId!: number;
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  declare instanceId: number;
 
   @BelongsTo(() => WorkflowInstance)
-  instance!: WorkflowInstance;
+  declare instance?: WorkflowInstance;
 
-  @Column({ type: DataType.STRING, allowNull: false })
-  stepName!: string;
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  declare fromStepIndex: number | null;
 
-  @Column({ type: DataType.STRING, allowNull: false })
-  status!: string;
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  declare fromStepName: string | null;
 
-  @Column({ type: DataType.TEXT, allowNull: true })
-  comment?: string;
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  declare toStepIndex: number;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare stepName: string;
+
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  declare userId: number;
+
+  @BelongsTo(() => User)
+  declare user?: User;
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  declare comment: string | null;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+  })
+  declare changedAt: Date;
 
   @HasMany(() => Attachment)
-  attachments!: Attachment[];
+  declare attachments?: Attachment[];
+
+  declare createdAt: Date;
 }

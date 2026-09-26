@@ -1,122 +1,244 @@
-import { 
-  BadRequestException, 
-  ForbiddenException, 
-  Injectable, 
-  NotFoundException 
-} from '@nestjs/common';
+import {BadRequestException,ForbiddenException,Injectable,NotFoundException,} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Attachment } from '../models/attachment.model';
 import { WorkflowInstance } from '../models/workflow-instance.model';
 import { WorkflowStepHistory } from '../models/workflow-step-history.model';
+import { Attachment } from '../models/attachment.model';
+import { University } from '../../catalogs/models/university.model';
+import { UsersService } from '../../users/users.service';
+import { User } from '../../users/users.model';
+import { RoleName } from '../../roles/role.model';
 import { MinioService } from 'src/common/minio/minio.service';
-import { UsersService } from 'src/users/users.service';
-import { User } from 'src/users/users.model';
-import { University } from 'src/catalogs/models/university.model';
- 
+
+interface UploadedWorkflowFile {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
+
 @Injectable()
 export class AttachmentsService {
+  private readonly allowedMimeTypes = new Set([
+    'image/png',
+    'image/jpeg',
+    'application/pdf',
+
+    'application/zip',
+    'application/gzip',
+    'application/x-rar-compressed',
+
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ]);
+
+ 
+  private readonly maxFileSize = 50 * 1024 * 1024;
+
   constructor(
-    @InjectModel(Attachment) private readonly attachmentModel: typeof Attachment,
-    @InjectModel(WorkflowInstance) private readonly instanceModel: typeof WorkflowInstance,
-    @InjectModel(WorkflowStepHistory) private readonly stepHistoryModel: typeof WorkflowStepHistory,
-    private readonly minioService: MinioService,
+    @InjectModel(Attachment)
+    private readonly attachmentModel: typeof Attachment,
+
+    @InjectModel(WorkflowStepHistory)
+    private readonly stepHistoryModel: typeof WorkflowStepHistory,
+
+    @InjectModel(WorkflowInstance)
+    private readonly instanceModel: typeof WorkflowInstance,
+
     private readonly usersService: UsersService,
+
+    private readonly minioService: MinioService,
   ) {}
 
   async uploadFile(
     instanceId: number,
-    file: { originalname: string; mimetype: string; size: number; buffer: Buffer },
+    file: UploadedWorkflowFile,
     currentUser: User,
   ): Promise<Attachment> {
-    const allowedMimeTypes = [
-      'image/png',
-      'image/jpeg',
-      'application/pdf',
-      'application/zip',
-      'application/x-gzip',
-      'application/x-rar-compressed',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException(`Недопустимый тип файла: ${file.mimetype}`);
+    if (!file) {
+      throw new BadRequestException(
+        'Файл не передан',
+      );
     }
 
-    const instance = await this.instanceModel.findByPk(instanceId, {
-      include: [University],
-    });
+    if (file.size <= 0) {
+      throw new BadRequestException(
+        'Нельзя загрузить пустой файл',
+      );
+    }
+
+    if (file.size > this.maxFileSize) {
+      throw new BadRequestException(
+        `Размер файла не должен превышать ${this.maxFileSize / 1024 / 1024} MB`,
+      );
+    }
+
+    if (
+      !this.allowedMimeTypes.has(file.mimetype)
+    ) {
+      throw new BadRequestException(
+        `Недопустимый тип файла: ${file.mimetype}`,
+      );
+    }
+
+    const instance =
+      await this.instanceModel.findByPk(
+        instanceId,
+        {
+          include: [University],
+        },
+      );
 
     if (!instance) {
-      throw new NotFoundException(`Процесс #${instanceId} не найден`);
+      throw new NotFoundException(
+        `Процесс #${instanceId} не найден`,
+      );
     }
 
-    await this.assertVisible(instance, currentUser);
-
-    const latestHistory = await this.stepHistoryModel.findOne({
-      where: { instanceId: instance.id },
-      order: [['createdAt', 'DESC']],
-    });
-
-    if (!latestHistory) {
-      throw new NotFoundException('У процесса ещё нет истории шагов. Нельзя прикрепить файл до первого перехода.');
-    }
-
-    const storagePath = await this.minioService.upload(
-      file.originalname,
-      file.buffer,
-      file.mimetype,
+    await this.assertVisible(
+      instance,
+      currentUser,
     );
 
-    const payload = {
-      stepHistoryId: latestHistory.id,
-      filename: file.originalname,
-      path: storagePath,
-      mimeType: file.mimetype,
-      size: file.size,
-    };
+    const latestHistory =
+      await this.stepHistoryModel.findOne({
+        where: {
+          instanceId: instance.id,
+        },
+        order: [
+          ['changedAt', 'DESC'],
+        ],
+      });
 
-    return this.attachmentModel.create(payload as any);
+    if (!latestHistory) {
+      throw new NotFoundException(
+        'История текущего этапа не найдена',
+      );
+    }
+
+    let storagePath: string | null = null;
+
+    try {
+      storagePath =
+        await this.minioService.upload(
+          file.originalname,
+          file.buffer,
+          file.mimetype,
+        );
+
+      return await this.attachmentModel.create({
+        stepHistoryId: latestHistory.id,
+        filename: file.originalname,
+        path: storagePath,
+        mimeType: file.mimetype,
+        size: file.size,
+      });
+    } catch (error) {
+     
+      if (storagePath) {
+        await this.minioService
+          .remove(storagePath)
+          .catch(() => undefined);
+      }
+
+      throw error;
+    }
   }
 
-  async getDownloadUrl(attachmentId: number, currentUser: User): Promise<string> {
-    const attachment = await this.attachmentModel.findByPk(attachmentId, {
-      include: [
+  async getDownloadUrl(
+    attachmentId: number,
+    currentUser: User,
+  ): Promise<string> {
+    this.assertCanDownload(currentUser);
+
+    const attachment =
+      await this.attachmentModel.findByPk(
+        attachmentId,
         {
-          model: WorkflowStepHistory,
           include: [
             {
-              model: WorkflowInstance,
-              include: [University],
+              model: WorkflowStepHistory,
+              include: [
+                {
+                  model: WorkflowInstance,
+                  include: [University],
+                },
+              ],
             },
           ],
         },
-      ],
-    });
+      );
 
     if (!attachment) {
-      throw new NotFoundException('Вложение не найдено');
+      throw new NotFoundException(
+        'Вложение не найдено',
+      );
     }
 
-    const instance = attachment.stepHistory?.instance;
+    const instance =
+      attachment.stepHistory?.instance;
+
     if (!instance) {
-      throw new NotFoundException('Связанный рабочий процесс не найден');
+      throw new NotFoundException(
+        'Связанный процесс не найден',
+      );
     }
 
-    await this.assertVisible(instance, currentUser);
+    await this.assertVisible(
+      instance,
+      currentUser,
+    );
 
-    return this.minioService.getPresignedUrl(attachment.path, 3600);
+    return this.minioService.getPresignedUrl(
+      attachment.path,
+      3600,
+    );
   }
 
-  private async assertVisible(instance: WorkflowInstance, currentUser: User): Promise<void> {
-    const visibleManagerIds = await this.usersService.getVisibleManagerIds(currentUser);
+  private assertCanDownload(
+    currentUser: User,
+  ): void {
+    const role = currentUser.role?.name;
 
-    if (visibleManagerIds !== null && instance.university) {
-      if (!visibleManagerIds.includes(instance.university.managerId)) {
-        throw new ForbiddenException('Нет доступа к этому процессу');
-      }
+    if (
+      role !== RoleName.ADMIN &&
+      role !== RoleName.MANAGER
+    ) {
+      throw new ForbiddenException(
+        'Скачивание документов доступно только менеджеру и администратору',
+      );
+    }
+  }
+
+  private async assertVisible(
+    instance: WorkflowInstance,
+    currentUser: User,
+  ): Promise<void> {
+    const visibleManagerIds =
+      await this.usersService.getVisibleManagerIds(
+        currentUser,
+      );
+
+    if (visibleManagerIds === null) {
+      return;
+    }
+
+    if (!instance.university) {
+      throw new ForbiddenException(
+        'Нет доступа к этому процессу',
+      );
+    }
+
+    if (
+      !visibleManagerIds.includes(
+        instance.university.managerId,
+      )
+    ) {
+      throw new ForbiddenException(
+        'Нет доступа к этому процессу',
+      );
     }
   }
 }

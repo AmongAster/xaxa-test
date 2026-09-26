@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { University } from '../catalogs/models/university.model';
+import { ITProduct } from '../catalogs/models/it-product.model';
+import { UsersModule } from '../users/users.module';
 import { WorkflowController } from './workflow.controller';
 import { WorkflowService } from './workflow.service';
 import { WorkflowTemplate } from './models/workflow-template.model';
@@ -10,16 +13,22 @@ import { AttachmentsController } from './attachments/attachments.controller';
 import { AttachmentsService } from './attachments/attachments.service';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([
+  imports: [SequelizeModule.forFeature([
       WorkflowTemplate,
       WorkflowInstance,
       WorkflowStepHistory,
       Attachment,
+      University,
+      ITProduct,
     ]),
+    UsersModule,
   ],
-  controllers: [WorkflowController, AttachmentsController],
-  providers: [WorkflowService, AttachmentsService],
-  exports: [WorkflowService],
+  controllers: [WorkflowController,
+    AttachmentsController,],
+
+  providers: [
+    WorkflowService,
+    AttachmentsService,],
+  exports: [WorkflowService,],
 })
 export class WorkflowModule {}

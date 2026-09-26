@@ -1,22 +1,27 @@
-import { IsNumber, IsString, IsOptional, Min } from 'class-validator';
+import {IsInt,IsNotEmpty,IsOptional,IsString,MaxLength,Min,} from 'class-validator';
 
 export class CreateWorkflowInstanceDto {
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   templateId!: number;
 
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   universityId!: number;
 
-  @IsNumber()
-  productId!: number; // Обязательное поле для связи с IT-продуктом
+  @IsInt()
+  @Min(1)
+  productId!: number;
 }
 
 export class TransitionWorkflowDto {
-  @IsNumber()
+  @IsInt()
   @Min(0)
   targetStepIndex!: number;
 
   @IsString()
   @IsOptional()
+  @IsNotEmpty()
+  @MaxLength(2000)
   comment?: string;
 }

@@ -108,21 +108,29 @@ export class UsersService {
    * - USER: только сам
    * Используется в CatalogsModule для построения WHERE managerId IN (...).
    */
-  async getVisibleManagerIds(currentUser: User): Promise<number[] | null> {
-    if (currentUser.role?.name === 'ADMIN') {
-      return null;
-    }
-    if (currentUser.role?.name === 'MANAGER') {
-      const subordinates = await this.userModel.findAll({
-        where: { managerUserId: currentUser.id },
-        attributes: ['id'],
-      });
-      return [currentUser.id, ...subordinates.map((s) => s.id)];
-    }
-    return [currentUser.id];
+  
+  async getVisibleManagerIds(
+  currentUser: User,
+): Promise<number[] | null> {
+  const role = currentUser.role?.name;
+
+  if (role === RoleName.ADMIN) {
+    return null;
   }
- 
-  findManyByIds(ids: number[]): Promise<User[]> {
-    return this.userModel.findAll({ where: { id: { [Op.in]: ids } } });
+
+  if (role === RoleName.MANAGER) {
+    const subordinates = await this.userModel.findAll({
+      where: {
+        managerUserId: currentUser.id,
+      },
+      attributes: ['id'],
+    });
+
+    return [
+      currentUser.id,
+      ...subordinates.map((user) => user.id),
+    ];
   }
-}
+
+  return [currentUser.id];
+}}
