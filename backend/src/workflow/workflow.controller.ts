@@ -1,23 +1,49 @@
-import { Controller, Post, Body, Param, Patch } from '@nestjs/common';
+import {  Controller,  Get,  Post,  Patch,  Body,  Param,  ParseIntPipe,  UseGuards } from '@nestjs/common';
 import { WorkflowService } from './workflow.service';
-import { CreateWorkflowTemplateDto, StartWorkflowDto, UpdateStepDto } from './dto/workflow.dto';
+import { CreateWorkflowInstanceDto, TransitionWorkflowDto } from './dto/workflow.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { User } from 'src/users/users.model';
 
 @Controller('workflow')
+@UseGuards(JwtAuthGuard)
 export class WorkflowController {
-  constructor(private readonly workflowService: WorkflowService) {}
+constructor(private readonly workflowService: WorkflowService) {}
 
-  @Post('templates')
-  createTemplate(@Body() dto: CreateWorkflowTemplateDto) {
-    return this.workflowService.createTemplate(dto);
-  }
-
+  /**
+   * Запуск нового процесса внедрения продукта в ВУЗе
+   * POST /workflow/instances
+   */
   @Post('instances')
-  startWorkflow(@Body() dto: StartWorkflowDto) {
-    return this.workflowService.startWorkflow(dto);
+  async createInstance(
+  @Body() dto: CreateWorkflowInstanceDto,
+  @CurrentUser() currentUser: User,
+  ) {
+  return this.workflowService.createInstance(dto, currentUser);
   }
 
-  @Patch('instances/:id/step')
-  updateStep(@Param('id') id: number, @Body() dto: UpdateStepDto) {
-    return this.workflowService.updateStep(Number(id), dto);
+  /**
+   * Получение информации о процессе по ID
+   * GET /workflow/instances/:id
+   */
+  @Get('instances/:id')
+  async findOne(
+  @Param('id', ParseIntPipe) id: number,
+  @CurrentUser() currentUser: User,
+  ) {
+  return this.workflowService.findOne(id, currentUser);
+  }
+
+  /**
+   * Переход процесса на другой шаг (смена этапа)
+   * PATCH /workflow/instances/:id/transition
+   */
+  @Patch('instances/:id/transition')
+  async transition(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() dto: TransitionWorkflowDto,
+  @CurrentUser() currentUser: User,
+  ) {
+  return this.workflowService.transition(id, dto, currentUser);
   }
 }

@@ -9,7 +9,7 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 import { AuditModule } from './audit/audit.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-// import { WorkflowModule } from './workflow/workflow.module';
+import { WorkflowModule } from './workflow/workflow.module';
 import { ReportsModule } from './reports/reports.module';
 // import { IntegrationsModule } from './integrations/integrations.module';
 
@@ -35,6 +35,7 @@ import { ReportsModule } from './reports/reports.module';
     AuditModule,
     UsersModule,
     RolesModule,
+    WorkflowModule,
     // AuthModule НЕ регистрирует guard'ы глобально — каждый защищённый
     // контроллер вешает @UseGuards(JwtAuthGuard, RolesGuard) на себя явно.
     AuthModule,

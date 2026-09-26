@@ -1,62 +1,117 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { 
+  BadRequestException, 
+  ForbiddenException, 
+  Injectable, 
+  NotFoundException 
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Sequelize } from 'sequelize-typescript';
+import { Transaction } from 'sequelize';
+import { University } from '../catalogs/models/university.model';
+import { CreateWorkflowInstanceDto, TransitionWorkflowDto } from './dto/workflow.dto';
+import { UsersService } from '../users/users.service';
+import { WorkflowInstance, WorkflowInstanceStatus } from './models/workflow-instance.model';
 import { WorkflowTemplate } from './models/workflow-template.model';
-import { WorkflowInstance } from './models/workflow-instance.model';
 import { WorkflowStepHistory } from './models/workflow-step-history.model';
-import { CreateWorkflowTemplateDto, StartWorkflowDto, UpdateStepDto } from './dto/workflow.dto';
+import { RoleName } from 'src/roles/role.model';
+import { User } from 'src/users/users.model';
 
 @Injectable()
 export class WorkflowService {
   constructor(
-    @InjectModel(WorkflowTemplate)
-    private templateModel: typeof WorkflowTemplate,
-    @InjectModel(WorkflowInstance)
-    private instanceModel: typeof WorkflowInstance,
-    @InjectModel(WorkflowStepHistory)
-    private historyModel: typeof WorkflowStepHistory,
+    @InjectModel(WorkflowInstance) private readonly instanceModel: typeof WorkflowInstance,
+    @InjectModel(WorkflowTemplate) private readonly templateModel: typeof WorkflowTemplate,
+    @InjectModel(WorkflowStepHistory) private readonly stepHistoryModel: typeof WorkflowStepHistory,
+    private readonly usersService: UsersService,
+    private readonly sequelize: Sequelize,
   ) {}
 
-  async createTemplate(dto: CreateWorkflowTemplateDto) {
-    return this.templateModel.create(dto as any);
-  }
-
-  async startWorkflow(dto: StartWorkflowDto) {
-    const template = await this.templateModel.findByPk(dto.templateId);
-    if (!template) throw new NotFoundException('Template not found');
-
-    const firstStep = template.steps.sort((a, b) => a.order - b.order)[0]?.stepName;
+  async createInstance(dto: CreateWorkflowInstanceDto, currentUser: User): Promise<WorkflowInstance> {
+    if (currentUser.role?.name !== RoleName.ADMIN && currentUser.role?.name !== RoleName.MANAGER) {
+      throw new ForbiddenException('Только администраторы и менеджеры могут запускать новые процессы внедрения');
+    }
 
     return this.instanceModel.create({
       templateId: dto.templateId,
-      status: 'IN_PROGRESS',
-      currentStep: firstStep || 'Completed',
+      universityId: dto.universityId,
+      productId: dto.productId,
+      currentStepIndex: 0,
+      status: WorkflowInstanceStatus.ACTIVE,
+    } as any);
+  }
+
+  async findOne(id: number, currentUser: User): Promise<WorkflowInstance> {
+    const instance = await this.instanceModel.findByPk(id, {
+      include: [University, WorkflowTemplate],
+    });
+
+    if (!instance) {
+      throw new NotFoundException(`Процесс #${id} не найден`);
+    }
+
+    await this.assertVisible(instance, currentUser);
+    return instance;
+  }
+
+  async transition(
+    id: number,
+    dto: TransitionWorkflowDto,
+    currentUser: User,
+  ): Promise<WorkflowInstance> {
+    const instance = await this.findOne(id, currentUser);
+    const template = instance.template;
+
+    if (!template) {
+      throw new NotFoundException('Шаблон процесса не найден');
+    }
+
+    const totalSteps = template.stepsConfig.length;
+
+    if (dto.targetStepIndex < 0 || dto.targetStepIndex >= totalSteps) {
+      throw new BadRequestException(`Индекс шага должен быть в диапазоне от 0 до ${totalSteps - 1}`);
+    }
+
+    const stepDelta = Math.abs(dto.targetStepIndex - instance.currentStepIndex);
+    const isAdmin = currentUser.role?.name === RoleName.ADMIN;
+
+    if (stepDelta > 1 && !isAdmin) {
+      throw new ForbiddenException('Нельзя перепрыгивать через несколько шагов без прав администратора');
+    }
+
+    const targetStepName = template.stepsConfig[dto.targetStepIndex];
+    const isCompleted = dto.targetStepIndex === totalSteps - 1;
+    const newStatus = isCompleted ? WorkflowInstanceStatus.COMPLETED : WorkflowInstanceStatus.ACTIVE;
+
+    return await this.sequelize.transaction(async (transaction: Transaction) => {
+      await this.stepHistoryModel.create(
+        {
+          instanceId: instance.id,
+          stepName: targetStepName,
+          status: newStatus,
+          comment: dto.comment,
+        } as any,
+        { transaction },
+      );
+
+      await instance.update(
+        {
+          currentStepIndex: dto.targetStepIndex,
+          status: newStatus,
+        },
+        { transaction },
+      );
+
+      return instance;
     });
   }
 
-  async updateStep(instanceId: number, dto: UpdateStepDto) {
-    const instance = await this.instanceModel.findByPk(instanceId, { include: [WorkflowTemplate] });
-    if (!instance) throw new NotFoundException('Instance not found');
+  private async assertVisible(instance: WorkflowInstance, currentUser: User): Promise<void> {
+    const visibleManagerIds = await this.usersService.getVisibleManagerIds(currentUser);
 
-    // Записываем историю шага
-    await this.historyModel.create({
-      instanceId,
-      stepName: instance.currentStep!,
-      status: dto.status,
-      comment: dto.comment,
-    });
-
-    // Логика перехода к следующему шагу
-    const steps = instance.template.steps.sort((a, b) => a.order - b.order);
-    const currentIndex = steps.findIndex((s) => s.stepName === instance.currentStep);
-
-    if (currentIndex !== -1 && currentIndex < steps.length - 1) {
-      instance.currentStep = steps[currentIndex + 1].stepName;
-    } else {
-      instance.currentStep = 'Completed';
-      instance.status = 'COMPLETED';
+    if (visibleManagerIds !== null && instance.university) {
+      if (!visibleManagerIds.includes(instance.university.managerId)) {
+        throw new ForbiddenException('Нет доступа к этому процессу');
+      }
     }
-
-    await instance.save();
-    return instance;
   }
 }

@@ -9,7 +9,7 @@ export class MinioService implements OnModuleInit {
 
   constructor(private readonly config: ConfigService) {
     this.client = new Minio.Client({
-      endPoint: this.config.get<string>('MINIO_ENDPOINT', 'localhost'),
+      endPoint: this.config.get<string>('MINIO_ENDPOINT', 'crm-minio'),
       port: this.config.get<number>('MINIO_PORT', 9000),
       useSSL: this.config.get<string>('MINIO_USE_SSL', 'false') === 'true',
       accessKey: this.config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),

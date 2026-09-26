@@ -1,32 +1,28 @@
-import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { Column, DataType, Model, Table, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
 import { WorkflowInstance } from './workflow-instance.model';
+import { Attachment } from './attachment.model';
 
-// Интерфейс, описывающий поля, необходимые при создании записи истории
-interface WorkflowStepHistoryCreationAttrs {
-  instanceId: number;
-  stepName: string;
-  status: string;
-  comment?: string | null;
-}
-
-@Table({ tableName: 'workflow_step_histories' })
-export class WorkflowStepHistory extends Model<WorkflowStepHistory, WorkflowStepHistoryCreationAttrs> {
+@Table({ tableName: 'workflow_step_histories', timestamps: true })
+export class WorkflowStepHistory extends Model<WorkflowStepHistory> {
   @Column({ type: DataType.INTEGER, primaryKey: true, autoIncrement: true })
   declare id: number;
 
   @ForeignKey(() => WorkflowInstance)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  declare instanceId: number; // ИСПРАВЛЕНО: declare вместо !
+  instanceId!: number;
 
   @BelongsTo(() => WorkflowInstance)
-  declare instance: WorkflowInstance; // ИСПРАВЛЕНО: declare вместо !
+  instance!: WorkflowInstance;
 
   @Column({ type: DataType.STRING, allowNull: false })
-  declare stepName: string;
+  stepName!: string;
 
   @Column({ type: DataType.STRING, allowNull: false })
-  declare status: string; // ИСПРАВЛЕНО: declare вместо !
+  status!: string;
 
   @Column({ type: DataType.TEXT, allowNull: true })
-  declare comment: string | null; // ИСПРАВЛЕНО: declare вместо ?
+  comment?: string;
+
+  @HasMany(() => Attachment)
+  attachments!: Attachment[];
 }
