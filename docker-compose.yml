@@ -39,8 +39,17 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      # Настройки подключения к PostgreSQL
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://crm-postgres:5432/${DB_NAME}
+      KC_DB_USERNAME: ${DB_USER}
+      KC_DB_PASSWORD: ${DB_PASSWORD}
+      KC_DB_SCHEMA: keycloak  # Рекомендуется выделить отдельную схему, чтобы не перемешивать таблицы
     ports:
       - '8080:8080'
+    depends_on:
+      - crm-postgres  # Keycloak не запустится, пока не поднимется Postgres
+
 
   crm-backend:
     build:
@@ -67,6 +76,7 @@ services:
       - crm-postgres
       - crm-redis
       - crm-keycloak # Добавляем зависимость от Keycloak
+      - crm-minio 
 
 volumes:
   redis_data:

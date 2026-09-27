@@ -8,8 +8,4 @@ export class UpdateUserDto {
     @IsString()
     @MinLength(2, {message: 'Имя должно быть больше 2 символов'})
     @MaxLength(50, {message: 'Имя не бывает больше 50 символов'})
-    fullName!: string;
-
-    @IsOptional()
-    @IsString()
-    phone?: string;}
+    name!: string;}

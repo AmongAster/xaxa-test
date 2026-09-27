@@ -1,7 +1,6 @@
 import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
 import { User } from '../users/users.model';
 
-
 export enum RoleName {
   USER = 'USER',
   MANAGER = 'MANAGER',
@@ -9,21 +8,21 @@ export enum RoleName {
 }
 
 @Table({
-   tableName: 'roles', 
-   timestamps: true })
-
-  export class Role extends Model<Role> {
+  tableName: 'roles', 
+  timestamps: true 
+})
+export class Role extends Model<Role> {
     
   @Column({
     type: DataType.ENUM(...Object.values(RoleName)),
     allowNull: false,
     unique: true,
   })
-  name!: RoleName;
+  declare name: RoleName; // <-- ИСПРАВЛЕНО: добавлено declare вместо !
 
   @Column({ type: DataType.STRING, allowNull: true })
-  description!: string;
+  declare description: string; // <-- ИСПРАВЛЕНО: добавлено declare вместо !
 
   @HasMany(() => User)
-  users!: User[];
+  declare users: User[]; // <-- ИСПРАВЛЕНО: добавлено declare вместо !
 }

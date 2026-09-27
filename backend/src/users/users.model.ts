@@ -1,39 +1,38 @@
-import {BelongsTo,Column,DataType,ForeignKey,HasMany,Model,Table,} from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from 'sequelize-typescript';
 import { Role } from '../roles/role.model';
-
 
 @Table({ tableName: 'users', timestamps: true })
 export class User extends Model<User> {
-@Column({ type: DataType.STRING, allowNull: false, unique: true })
-keycloakId!: string;
+  @Column({ type: DataType.STRING, allowNull: false, unique: true })
+  declare keycloakId: string; // <-- Заменено с keycloakId!: string
 
-@Column({ type: DataType.STRING, allowNull: false, unique: true })
-email!: string;
+  @Column({ type: DataType.STRING, allowNull: false, unique: true })
+  declare email: string;
 
-@Column({ type: DataType.STRING, allowNull: false })
-fullName!: string;
+  @Column({ type: DataType.STRING, allowNull: false })
+  declare fullName: string;
 
-@Column({ type: DataType.STRING, allowNull: true })
-phone!: string;
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare phone: string;
 
-@ForeignKey(() => Role)
-@Column({ type: DataType.INTEGER, allowNull: false })
-roleId!: number;
+  @ForeignKey(() => Role)
+  @Column({ type: DataType.INTEGER, allowNull: false })
+  declare roleId: number;
 
-@BelongsTo(() => Role)
-role!: Role;
+  @BelongsTo(() => Role)
+  declare role: Role; // Для ассоциаций (!) оставляем как есть
 
-// Самоссылка для иерархии "руководитель -> подчинённые" (видимость ВУЗов)
-@ForeignKey(() => User)
-@Column({ type: DataType.INTEGER, allowNull: true })
-managerUserId!: number;
+  // Самоссылка для иерархии "руководитель -> подчинённые"
+  @ForeignKey(() => User)
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare managerUserId: number;
 
-@BelongsTo(() => User, 'managerUserId')
-managerUser!: User;
+  @BelongsTo(() => User, 'managerUserId')
+  declare managerUser: User;
 
-@HasMany(() => User, 'managerUserId')
-subordinates!: User[];
+  @HasMany(() => User, 'managerUserId')
+  declare subordinates: User[];
 
-@Column({ type: DataType.BOOLEAN, defaultValue: true })
-isActive!: boolean;
+  @Column({ type: DataType.BOOLEAN, defaultValue: true })
+  declare isActive: boolean;
 }

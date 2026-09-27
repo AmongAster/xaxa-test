@@ -13,7 +13,7 @@ export class MinioService implements OnModuleInit {
     this.client = new Minio.Client({
       endPoint: this.config.get<string>(
         'MINIO_ENDPOINT',
-        'localhost',
+        'crm-minio',
       ),
 
       port: this.config.get<number>(
