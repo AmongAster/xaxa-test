@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { BullModule } from '@nestjs/bullmq';
-
 import { DatabaseModule } from './database/database.module';
 import { RedisCacheModule } from './cache/redis-cache.module';
 import { RolesModule } from './roles/roles.module';
@@ -9,9 +7,9 @@ import { CatalogsModule } from './catalogs/catalogs.module';
 import { AuditModule } from './audit/audit.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-// import { WorkflowModule } from './workflow/workflow.module';
 import { ReportsModule } from './reports/reports.module';
-// import { IntegrationsModule } from './integrations/integrations.module';
+import { WorkflowModule } from './workflow/workflow.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -40,6 +38,7 @@ import { ReportsModule } from './reports/reports.module';
     AuthModule,
     CatalogsModule,
     ReportsModule,
+    WorkflowModule
   ],
 })
 export class AppModule {}

@@ -7,7 +7,7 @@ import { University } from '../../catalogs/models/university.model';
 import { UsersService } from '../../users/users.service';
 import { User } from '../../users/users.model';
 import { RoleName } from '../../roles/role.model';
-import { MinioService } from 'src/common/minio/minio.service';
+import { MinioService } from '../../common/minio/minio.service';
 
 interface UploadedWorkflowFile {
   originalname: string;

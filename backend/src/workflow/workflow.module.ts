@@ -11,6 +11,7 @@ import { WorkflowStepHistory } from './models/workflow-step-history.model';
 import { Attachment } from './models/attachment.model';
 import { AttachmentsController } from './attachments/attachments.controller';
 import { AttachmentsService } from './attachments/attachments.service';
+import { MinioModule } from '../common/minio/minio.module';
 
 @Module({
   imports: [SequelizeModule.forFeature([
@@ -22,6 +23,7 @@ import { AttachmentsService } from './attachments/attachments.service';
       ITProduct,
     ]),
     UsersModule,
+    MinioModule
   ],
   controllers: [WorkflowController,
     AttachmentsController,],
