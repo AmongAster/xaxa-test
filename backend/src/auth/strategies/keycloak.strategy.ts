@@ -46,24 +46,17 @@ export class KeycloakStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
  
-    async validate(payload: KeycloakJwtPayload) {
+  async validate(payload: KeycloakJwtPayload) {
     // Сюда мы попадаем, ТОЛЬКО если Passport успешно проверил подпись, issuer и audience токена
     try {
       const user = await this.usersService.findOrCreateFromKeycloak(payload);
       
-      // Используем .get('isActive') или .getDataValue('isActive') чтобы обойти баг shadowing в Sequelize
-      const isActive = user.get ? user.get('isActive') : user.isActive;
-
-      if (!isActive) {
+      if (!user.isActive) {
         throw new UnauthorizedException('Учётная запись деактивирована');
       }
       
       return user; // Объект пользователя запишется в request.user
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error; // Пробрасываем нашу ошибку деактивации дальше, не перетирая логом базы данных
-      }
-
       // Отладочный лог на случай, если Sequelize упадет из-за ограничений БД
       console.error('==================================================');
       console.error('🚨 [ОШИБКА БАЗЫ ДАННЫХ В KEYCLOAK STRATEGY]:');
